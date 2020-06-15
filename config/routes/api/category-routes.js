@@ -4,7 +4,14 @@ const { Category, Product } = require('../../../models');
 // The `/api/categories` endpoint
 
 router.get('/', (req, res) => {
-  Category.findAll()
+  Category.findAll({
+    include: [
+      {
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
+      }
+    ]
+  })
     .then(dbUserData => res.json(dbUserData))
     .catch(err => {
       console.log(err);
@@ -16,7 +23,13 @@ router.get('/:id', (req, res) => {
   Category.findOne({
     where: {
       id: req.params.id
-    }
+    },
+    include: [
+      {
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
+      }
+    ]
   })
     .then(dbUserData => {
       if (!dbUserData) {
@@ -34,9 +47,9 @@ router.get('/:id', (req, res) => {
 router.post('/', (req, res) => {
   // create a new category
   Category.create({
-    category_name: req.body.categoryName
+    category_name: req.body.category_name
   })
-    .then(dbUserData => res.json(dbUserData))
+    .then(data => res.json(data))
     .catch(err => {
       console.log(err);
       res.status(500).json(err);
@@ -45,14 +58,12 @@ router.post('/', (req, res) => {
 
 router.put('/:id', (req, res) => {
   // update a category by its `id` value
-  Category.upsert({
-    id: req.params.id,
-    category_name: req.body.categoryName
+  Category.update(req.body, {
+    where: {
+      id: req.params.id
+    }
   })
-    .then(created => {
-      created ? res.send({ message: `Created resource with id ${req.params.id}` }) :
-        res.sendStatus(204);
-    })
+    .then((updated) => res.json(updated))
     .catch(err => {
       console.log(err);
       res.status(500).json(err);
@@ -75,7 +86,7 @@ router.delete('/:id', (req, res) => {
     .catch(err => {
       console.log(err);
       res.status(500).json(err);
-    })
+    });
 });
 
 module.exports = router;
